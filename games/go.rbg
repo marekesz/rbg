@@ -1,0 +1,120 @@
+// Go (19x19)
+// -- Area scoring.
+// -- No ko rule.
+// -- 722 turn limit.
+
+#players = black(361), white(361)
+#variables = blackPass(1), whitePass(1), turn(722)
+#pieces = empty, blackStone, whiteStone, toCapture, dame
+
+#boardLine = [empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty]
+#board = rectangle(up,down,left,right,
+         boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine boardLine)
+
+#anySquare = (left* + right*)(up* + down*)
+#resetSquare = (left* {! left} up*  {! up})
+//#resetSquare = (right* left^18 down* up^18)
+#gotoNeighbor(neighbor) = ((up+down+left+right){neighbor})
+#gotoBlockNeighbor(stone; neighbor) = (gotoNeighbor(stone)* gotoNeighbor(neighbor))
+#blockHasLiberty(stone) = {? gotoBlockNeighbor(stone; empty)}
+#blockHasNoLiberty(stone) = {! gotoBlockNeighbor(stone; empty)}
+
+#placeStone(stone; oppStone) = (
+      anySquare
+      {empty}
+      [stone]
+      (
+          // Stawiamy na puste pole, które należy do bloku posiadającego oddech
+          blockHasLiberty(stone)
+          // Stawiamy na puste pole które ma za sąsiada blok przeciwnika nie mający oddechu
+        + {? (up+down+left+right) {stone} blockHasNoLiberty(oppStone)}
+      )
+    )
+
+
+#markNeighborToCapture(oppStone; dir; oppDir) = (
+      (
+          dir {oppStone} blockHasNoLiberty(oppStone) [toCapture] oppDir
+        + {! dir {oppStone} blockHasNoLiberty(oppStone)}
+      ) ->>
+    )
+
+#markToCapture(oppStone) = (
+      markNeighborToCapture(oppStone; up; down)
+      markNeighborToCapture(oppStone; down; up)
+      markNeighborToCapture(oppStone; left; right)
+      markNeighborToCapture(oppStone; right; left)
+    )    
+      
+#floodfillCaptures(oppStone) = (
+      (
+        anySquare
+        {toCapture}
+        gotoNeighbor(oppStone)
+        [toCapture]
+        ->>
+      )*
+      {! anySquare {toCapture} gotoNeighbor(oppStone) }
+    )
+
+#clearCaptures = (
+      (
+        anySquare
+        {toCapture}
+        [empty]
+        ->>
+      )*
+      {! anySquare {toCapture} }
+    )
+    
+#countPoints = (
+      (
+        anySquare 
+        {empty}
+        ->>
+        (
+            (
+                {? gotoBlockNeighbor(empty; dame)}
+              + {? gotoBlockNeighbor(empty; blackStone)}
+                {? gotoBlockNeighbor(empty; whiteStone)}
+            ) [dame]
+          + {! gotoBlockNeighbor(empty; dame)}
+            (
+                {? gotoBlockNeighbor(empty; blackStone)}
+                {! gotoBlockNeighbor(empty; whiteStone)}
+                [blackStone]
+              +
+                {? gotoBlockNeighbor(empty; whiteStone)}
+                {! gotoBlockNeighbor(empty; blackStone)}
+                [whiteStone]
+            )
+        )
+        ->>
+      )*
+      {! anySquare {empty}}
+      [$ white = whiteStone]
+      [$ black = blackStone]
+    )
+
+#endGameCheck = (
+      {$ blackPass + whitePass < 2}
+      [$ turn = turn+1]
+    + ( {$ blackPass + whitePass == 2} + {$ turn == 722})
+      countPoints resetSquare ->> {}
+    )
+
+#turn(me; opp) = (
+      (
+          [$ me~Pass=0]
+          placeStone(me~Stone; opp~Stone) ->>
+          markToCapture(opp~Stone) ->>
+          floodfillCaptures(opp~Stone) ->>
+          clearCaptures
+        + [$ me~Pass=1]
+      ) ->> endGameCheck resetSquare ->opp
+    )
+
+#rules = ->black (
+      turn(black; white) 
+      turn(white; black)
+    )*

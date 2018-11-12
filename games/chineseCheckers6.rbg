@@ -1,0 +1,126 @@
+// Chinese checkers
+// -- Six players variant
+// -- No alliances
+// -- First win ends the game
+
+#players = northPlayer(100), northEastPlayer(100), southEastPlayer(100), southPlayer(100), southWestPlayer(100), northWestPlayer(100)
+#variables = turn(200)
+#pieces = northPiece, northEastPiece, southEastPiece, southPiece, southWestPiece, northWestPiece, empty
+
+#e = empty
+#N = northPiece
+#NE = northEastPiece
+#SE = southEastPiece
+#S = southPiece
+#SW = southWestPiece
+#NW = northWestPiece
+
+#board = hexagon(northWest, northEast, east, southEast, southWest, west,
+                    [   ,   ,   ,   , N ,   ,   ,   ,   ]
+                  [   ,   ,   ,   , N , N ,   ,   ,   ,   ]
+                [   ,   ,   ,   , N , N , N ,   ,   ,   ,   ]
+              [   ,   ,   ,   , N , N , N , N ,   ,   ,   ,   ]
+            [NW ,NW ,NW ,NW , e , e , e , e , e ,NE ,NE ,NE ,NE ]
+          [   ,NW ,NW ,NW , e , e , e , e , e , e ,NE ,NE ,NE ,   ]
+        [   ,   ,NW ,NW , e , e , e , e , e , e , e ,NE ,NE ,   ,   ]
+      [   ,   ,   ,NW , e , e , e , e , e , e , e , e ,NE ,   ,   ,   ]
+    [   ,   ,   ,   , e , e , e , e , e , e , e , e , e ,   ,   ,   ,   ]
+      [   ,   ,   ,SW , e , e , e , e , e , e , e , e ,SE ,   ,   ,   ]
+        [   ,   ,SW ,SW , e , e , e , e , e , e , e ,SE ,SE ,   ,   ]
+          [   ,SW ,SW ,SW , e , e , e , e , e , e ,SE ,SE ,SE ,   ]
+            [SW ,SW ,SW ,SW , e , e , e , e , e ,SE ,SE ,SE ,SE ]
+              [   ,   ,   ,   , S , S , S , S ,   ,   ,   ,   ]
+                [   ,   ,   ,   , S , S , S ,   ,   ,   ,   ]
+                  [   ,   ,   ,   , S , S ,   ,   ,   ,   ]
+                    [   ,   ,   ,   , S ,   ,   ,   ,   ])
+
+#anyNeighbor = (northWest + northEast + east + southEast + southWest + west)
+
+#anySquare = anyNeighbor*
+
+#inCorner(relativeNorthWest; relativeNorthEast; relativeEast; relativeWest) =
+    {! relativeNorthWest + relativeNorthEast + relativeWest + relativeEast}
+
+#filledCorner(relativeNorthWest; relativeNorthEast; relativeEast; relativeSouthEast; relativeSouthWest; relativeWest; piece) =
+    anySquare
+    inCorner(relativeNorthWest; relativeNorthEast; relativeEast; relativeWest) {piece}
+    relativeSouthWest {piece}
+    relativeSouthWest {piece}
+    relativeSouthWest {piece}
+    relativeEast {piece}
+    relativeEast {piece}
+    relativeEast {piece}
+    relativeNorthWest {piece}
+    relativeNorthWest {piece}
+    relativeSouthWest {piece}
+
+#setUniversalScore(score) =
+    [$
+        southPlayer = score,
+        northPlayer = score,
+        northWestPlayer = score,
+        northEastPlayer = score,
+        southWestPlayer = score,
+        southEastPlayer = score
+    ]
+
+#everybodyLooses = setUniversalScore(0)
+#everybodyTies = setUniversalScore(50)
+
+#southWins =
+    filledCorner(northWest; northEast; east; southEast; southWest; west; southPiece)
+
+#southWestWins =
+    filledCorner(northEast; east; southEast; southWest; west; northWest; southWestPiece) 
+
+#northWestWins =
+    filledCorner(east; southEast; southWest; west; northWest; northEast; northWestPiece)
+
+#northWins =
+    filledCorner(southEast; southWest; west; northWest; northEast; east; northPiece)
+
+#northEastWins =
+    filledCorner(southWest; west; northWest; northEast; east; southEast; northEastPiece)
+
+#southEastWins =
+    filledCorner(west; northWest; northEast; east; southEast; southWest; southEastPiece)
+
+#directedSingleJump(direction) =
+    direction {! {empty}} direction {empty}
+
+#singleJump =
+    (
+        directedSingleJump(northWest)
+      + directedSingleJump(northEast)
+      + directedSingleJump(east)
+      + directedSingleJump(southEast)
+      + directedSingleJump(southWest)
+      + directedSingleJump(west)
+    )
+
+#neighborJump = anyNeighbor {empty}
+
+#pickUpPiece(piece) =
+    {piece}[empty]
+
+#move(playerDirection; winCondition; nextPlayerDirection) =
+    anySquare
+    pickUpPiece(playerDirection~Piece)
+    (
+        neighborJump
+      + singleJump*
+    ) [playerDirection~Piece] ->> [$ turn = turn+1]
+    (
+        {? winCondition} everybodyLooses [$ playerDirection~Player = 100]->>{}
+      + {! winCondition} ->nextPlayerDirection~Player
+    )
+
+#rules = everybodyTies ->northPlayer
+    (
+        move(north; northWins; northEast)
+        move(northEast; northEastWins; southEast)
+        move(southEast; southEastWins; south)
+        move(south; southWins; southWest)
+        move(southWest; southWestWins; northWest)
+        move(northWest; northWestWins; north)
+    )*

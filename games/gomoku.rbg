@@ -1,0 +1,47 @@
+// Gomoku standard 15x15
+
+#players = white(100), black(100)
+#pieces = e, w, b
+#variables =
+#board = rectangle(up,down,left,right,
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e])
+         
+#anySquare = ((up* + down*)(left* + right*))
+
+#winAt(piece; shift1; shift2) = (
+    (shift1 {piece})* {! shift1 {piece}}
+    (shift2 {piece})^4 {! shift2 {piece}}
+  )
+#winAt(piece) = (
+      winAt(piece; up left; down right)
+    + winAt(piece; up; down)
+    + winAt(piece; up right; up left)
+    + winAt(piece; left; right)
+  )
+
+#turn(me; opp; piece) = (
+      anySquare {e} ->> [piece] 
+      (
+          {! winAt(piece)} ->opp
+        + {? winAt(piece)} [$ me=100] [$ opp=0] ->> {}
+      )
+    )
+
+#rules = [$ white=50] [$ black=50] ->white (
+    turn(white; black; w)
+    turn(black; white; b)
+  )*

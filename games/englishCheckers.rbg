@@ -1,0 +1,95 @@
+// English checkers (draughts)
+// -- The game ends after 20 moves without capturing or moving a man.
+
+#players = black(100), white(100)
+#pieces = empty, whiteMan, whiteKing, blackMan, blackKing
+#variables = stagnation(20)
+
+#line(piece) = [piece, empty, piece, empty, piece, empty, piece, empty]
+#offsetLine(piece) = [empty, piece, empty, piece, empty, piece, empty, piece]
+#board = rectangle(up,down,left,right,
+         offsetLine(blackMan)
+         line(blackMan)
+         offsetLine(blackMan)
+         line(empty)
+         offsetLine(empty)
+         line(whiteMan)
+         offsetLine(whiteMan)
+         line(whiteMan))
+
+#anySquare = ((up left + up right + down left + down right)*)
+
+#grabPiece(piece) = {piece}[empty]
+#dropMan(me; forward) = ({? forward} [me~Man] + {! forward} [me~King])
+
+#potentialJumpInGivenDirection(xDir; yDir; middleAction; opp) =
+    xDir yDir
+    {opp~Man,opp~King}
+    middleAction
+    xDir yDir
+    {empty}
+
+#potentialJumpForward(opp; middleAction; forward) = (
+        potentialJumpInGivenDirection(left; forward; middleAction; opp)
+      + potentialJumpInGivenDirection(right; forward; middleAction; opp)
+    )
+
+#potentialJumpAround(opp; middleAction) = (
+        potentialJumpForward(opp; middleAction; up)
+      + potentialJumpForward(opp; middleAction; down)
+    )
+
+#canCapture(me; opp; forward) =
+    anySquare
+    (
+        {me~King} potentialJumpAround(opp; )
+      + {me~Man} potentialJumpForward(opp; ; forward)
+    )
+
+#nonCapturingManMove(me; forward) =
+    grabPiece(me~Man)
+    (left + right) forward {empty}
+    ->> dropMan(me; forward)
+
+#capturingManMove(me; opp; forward) =
+    grabPiece(me~Man)
+    potentialJumpForward(opp; [empty]; forward)
+    (potentialJumpForward(opp; [empty]; forward))*
+    {! potentialJumpForward(opp; ; forward)}
+    ->> dropMan(me; forward)
+
+#nonCapturingKingMove(me) =
+    grabPiece(me~King)
+    (up + down) (left + right) {empty}
+    ->> [me~King]
+
+#capturingKingMove(me; opp) =
+    grabPiece(me~King)
+    potentialJumpAround(opp; [empty])
+    (potentialJumpAround(opp; [empty]))*
+    {! potentialJumpAround(opp;)}
+    ->> [me~King]
+
+#turn(me; opp; forward) =
+    (
+        {! canCapture(me; opp; forward)}
+        anySquare
+        (
+            nonCapturingManMove(me; forward) [$ stagnation = 0]
+          + nonCapturingKingMove(me)
+        )
+      + anySquare
+        (
+            capturingManMove(me; opp; forward)
+          + capturingKingMove(me; opp)
+        ) [$ stagnation = 0]
+    )
+    [$ me=50] [$ opp=50]
+    ->>
+    [$ stagnation = stagnation+1] [$ me=100] [$ opp=0]
+    ->opp
+
+#rules = right ->black (
+      turn(black; white; down)
+      turn(white; black; up)
+    )*

@@ -1,0 +1,78 @@
+// Othello (reversi)
+
+#players = white(100), black(100)
+#pieces = e, w, b
+#variables =
+#board = rectangle(up,down,left,right,
+         [e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e]
+         [e,e,e,w,b,e,e,e]
+         [e,e,e,b,w,e,e,e]
+         [e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e]
+         [e,e,e,e,e,e,e,e])
+
+#anySquare = ((up* + down*)(left* + right*))
+#anyNeighborSquare = (up + down + left + right + (up + down)(left + right))
+
+#swapDirectionPossible(me; opp; dir) = (
+    dir {opp} dir
+    ({opp} dir)*
+    {me}
+  )
+
+#movePossible(me; opp) = (
+      swapDirectionPossible(me; opp; up left)
+    + swapDirectionPossible(me; opp; up)
+    + swapDirectionPossible(me; opp; up right)
+    + swapDirectionPossible(me; opp; left)
+    + swapDirectionPossible(me; opp; right)
+    + swapDirectionPossible(me; opp; down left)
+    + swapDirectionPossible(me; opp; down)
+    + swapDirectionPossible(me; opp; down right)
+  )
+
+#swapDirection(me; opp; dir; backDir) = (
+      {! swapDirectionPossible(me; opp; dir)}
+    + dir {opp} [me] dir ({opp} [me] dir)* {me}
+      backDir ({me} backDir)* {e}
+  )
+
+#swapDirections(me; opp) = (
+    swapDirection(me; opp; up left; down right)
+    swapDirection(me; opp; up; down)
+    swapDirection(me; opp; up right; down left)
+    swapDirection(me; opp; left; right)
+    swapDirection(me; opp; right; left)
+    swapDirection(me; opp; down left; up right)
+    swapDirection(me; opp; down; up)
+    swapDirection(me; opp; down right; up left)
+  )
+
+#setScores = (
+      {$ w > b} [$ black = 0] [$ white = 100]
+    + {$ w < b} [$ black = 100] [$ white = 0]
+    + {$ w == b} [$ black = 50] [$ white = 50]
+  )
+
+#turn(me; opp) = (
+    (
+        (anySquare {opp} anyNeighborSquare {e} {? movePossible(me; opp)})
+        ->>
+        swapDirections(me; opp)
+        [me]
+      + {! anySquare {opp} anyNeighborSquare {e} {? movePossible(me; opp)}}
+        ->>
+    )
+    (
+        {? anySquare ({opp} anyNeighborSquare {e} movePossible(me; opp) + {me} anyNeighborSquare {e} movePossible(opp; me))}
+      + {! anySquare ({opp} anyNeighborSquare {e} movePossible(me; opp) + {me} anyNeighborSquare {e} movePossible(opp; me))}
+        ->> setScores ->> {}
+    )
+  )
+
+#rules = (
+    ->black turn(b; w)
+    ->white turn(w; b)
+  )*

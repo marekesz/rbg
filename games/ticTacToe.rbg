@@ -1,0 +1,31 @@
+// TicTacToe
+
+#players = xplayer(100), oplayer(100)
+#pieces = e, x, o
+#variables =
+#board = rectangle(up,down,left,right,
+    [e, e, e]
+    [e, e, e]
+    [e, e, e])
+
+#anySquare = ((up* + down*)(left* + right*))
+
+#winAtDir(dir; oppDir; piece) = (dir {piece} (dir + (oppDir)^2) {piece} + (oppDir {piece})^2)
+#winAt(piece) = (
+      winAtDir(up left; down right; piece)
+    + winAtDir(up; down; piece)
+    + winAtDir(up right; down left; piece)
+    + winAtDir(left; right; piece)
+  )
+
+#turn(me; opp) =
+    anySquare {e} ->> [me]
+    (
+        {! winAt(me)} ->opp~player
+      + {? winAt(me)} [$ me~player=100] [$ opp~player=0] ->> {}
+    )
+
+#rules = [$ xplayer=50] [$ oplayer=50] ->oplayer (
+    turn(x; o)
+    turn(o; x)
+  )*

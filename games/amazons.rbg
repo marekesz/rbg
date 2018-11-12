@@ -1,0 +1,42 @@
+// Amazons
+
+#players = white(100), black(100)
+#pieces = e, w, b, x
+#variables =
+#board = rectangle(up,down,left,right,
+         [e, e, e, b, e, e, b, e, e, e]
+         [e, e, e, e, e, e, e, e, e, e]
+         [e, e, e, e, e, e, e, e, e, e]
+         [b, e, e, e, e, e, e, e, e, b]
+         [e, e, e, e, e, e, e, e, e, e]
+         [e, e, e, e, e, e, e, e, e, e]
+         [w, e, e, e, e, e, e, e, e, w]
+         [e, e, e, e, e, e, e, e, e, e]
+         [e, e, e, e, e, e, e, e, e, e]
+         [e, e, e, w, e, e, w, e, e, e])
+
+#anySquare = ((up* + down*)(left* + right*))
+
+#queenShift = (
+      (up left {e}) (up left {e})* +
+      (up {e}) (up {e})* +
+      (up right {e}) (up right {e})* +
+      (left {e}) (left {e})* +
+      (right {e}) (right {e})* +
+      (down left {e}) (down left {e})* +
+      (down {e}) (down {e})* +
+      (down right {e}) (down right {e})*
+    )
+
+#turn(piece; player) = (
+    anySquare {piece} [e]
+    queenShift
+    [piece]
+    queenShift
+    ->> [x]
+  )
+
+#rules = ->white (
+    turn(w; white) [$ white=100, black=0] ->black
+    turn(b; black) [$ white=0, black=100] ->white
+  )*
