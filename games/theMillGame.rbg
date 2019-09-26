@@ -1,8 +1,9 @@
-// The Mill Game
+// The Mill Game (Nine men's morris)
+// -- The play ends with a draw after 50 moves without forming a mill.
 
 #pieces = empty, whitePiece, blackPiece
 #players = white(100), black(100)
-#variables = turn(50)
+#variables = stagnation(50)
 
 #circleSegment(
     v;id1;id2;id3;previousOnCircle;
@@ -28,8 +29,8 @@
         ,right: middle2;,down: middle4;,left: middle6;,up: middle8)
     circle(
         middle;
-        ,right: inner2;,down: inner4;,left: inner6;,up: inner8;
-        ,left: outer2;,up: outer4;,right: outer6;,down: outer8)
+        ,left: outer2;,up: outer4;,right: outer6;,down: outer8;
+        ,right: inner2;,down: inner4;,left: inner6;,up: inner8)
     circle(
         inner;
         ,left: middle2;,up: middle4;,right: middle6;,down: middle8;
@@ -37,84 +38,86 @@
 
 
 #anyNeighbor = (up+down+left+right)
-
 #anySquare = anyNeighbor*
 
-#threeInRow(piece;direction) =
-    {piece}direction{piece}direction{piece}
-
-#formedMill(player) =
-    anySquare
-    (
-        threeInRow(player~Piece;up)
-      + threeInRow(player~Piece;down)
-      + threeInRow(player~Piece;left)
-      + threeInRow(player~Piece;right)
+#isPartOfDirectedMill(color;direction1;direction2) = (
+        direction1 {color~Piece} (direction1 + direction2^2) {color~Piece}
+      + (direction2 {color~Piece})^2
     )
-
-#isPartOfDirectedMill(color;direction1;direction2) =
-    (
-        {? direction1 {color~Piece}} {? direction2 {color~Piece}}
-      + threeInRow(color~Piece;direction1)
-      + threeInRow(color~Piece;direction2)
-    )
-
-#isPartOfMill(color) =
-    (
+#isPartOfMill(color) = (
         isPartOfDirectedMill(color;up;down)
       + isPartOfDirectedMill(color;left;right)
     )
 
-#placePiece(piece) = {empty}[piece]
+#pieceOutOfMill(color) = anySquare {color~Piece} {! isPartOfMill(color)}
 
-#removePiece(piece) = {piece}[empty]
+#findAndCaptureOpponentOutOfMill(color) =
+    anySquare {color~Piece} {! isPartOfMill(color)} ->> [empty] [$ stagnation = 0]
 
-#findAndCaptureOpponent(color) =
-    anySquare {color~Piece}
-    (
-        {! isPartOfMill(color)}
-      + {! anySquare {color~Piece}{! isPartOfMill(color)}}
-    )->>[empty]
+#findAndCaptureOpponentAny(color) =
+    anySquare {color~Piece} ->> [empty] [$ stagnation = 0]
 
-#canContinueGame(color) = {$ color~Piece > 2}
-
-#handlePiecePlacement(color;opponentColor) =
-    placePiece(color~Piece)
-    (
-        {? isPartOfMill(color)}findAndCaptureOpponent(opponentColor)
-      + {! isPartOfMill(color)}
+#captureOutOfMill(color;opponentColor) = (
+        {! isPartOfMill(color)} ->>
+      + {? isPartOfMill(color)} findAndCaptureOpponentOutOfMill(opponentColor)
     )
-    ->>[$ color=50, opponentColor=50]
-    ->>[$ color=100, opponentColor=0, turn=turn+1]->opponentColor
+#captureAny(color;opponentColor) = (
+        {! isPartOfMill(color)} ->>
+      + {? isPartOfMill(color)} findAndCaptureOpponentAny(opponentColor)
+    )
+
+#putPiece(color) =
+    ->color anySquare {empty} [color~Piece]
 
 #firstPhaseTurn(color;opponentColor) =
-    anySquare
-    handlePiecePlacement(color;opponentColor)
+    [$ stagnation = stagnation + 1]
+    (
+        {? pieceOutOfMill(opponentColor)}
+        putPiece(color)
+        captureOutOfMill(color;opponentColor)
+      + {! pieceOutOfMill(opponentColor)}
+        putPiece(color)
+        captureAny(color;opponentColor)
+    )
 
-#standardMovement(color) =
-    {$ color~Piece > 2}
-    anyNeighbor
+#movePiece(color) = (
+        {$ color~Piece > 3} ->color
+        anySquare {color~Piece} [empty]
+        anyNeighbor
+      + {$ color~Piece == 3} ->color
+        anySquare {color~Piece} [empty]
+        anySquare
+    ) {empty} [color~Piece]
 
-#flyingMovement(color) =
-    {$ color~Piece == 2}
-    anySquare
+#endTurn(color;opponentColor) =
+    (
+        {$ stagnation < 50}
+      + {$ stagnation == 50} [$ color=50, opponentColor=50] ->> {}
+    )
+    [$ color=100, opponentColor=0]
+    (
+        {$ opponentColor~Piece >= 3}
+      + {$ opponentColor~Piece < 3} ->> {}
+    )
 
 #secondPhaseTurn(color;opponentColor) =
-    canContinueGame(color)
-    anySquare
-    removePiece(color~Piece)
+    [$ stagnation = stagnation + 1]
     (
-        standardMovement(color)
-      + flyingMovement(color)
+        {? pieceOutOfMill(opponentColor)}
+        movePiece(color)
+        captureOutOfMill(color;opponentColor)
+      + {! pieceOutOfMill(opponentColor)}
+        movePiece(color)
+        captureAny(color;opponentColor)
     )
-    handlePiecePlacement(color;opponentColor)
+    endTurn(color;opponentColor)
 
-#rules = ->white
+#rules = [$ black=100, white=0]
     (
         firstPhaseTurn(white;black)
         firstPhaseTurn(black;white)
     )^9
     (
         secondPhaseTurn(white;black)
-      + secondPhaseTurn(black;white)
+        secondPhaseTurn(black;white)
     )*

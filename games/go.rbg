@@ -4,7 +4,7 @@
 // -- 722 turn limit.
 
 #players = black(361), white(361)
-#variables = blackPass(1), whitePass(1), turn(722)
+#variables = blackPass(1), whitePass(1), turn(721)
 #pieces = empty, blackStone, whiteStone, toCapture, dame
 
 #boardLine = [empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty]
@@ -13,7 +13,6 @@
 
 #anySquare = (left* + right*)(up* + down*)
 #resetSquare = (left* {! left} up*  {! up})
-//#resetSquare = (right* left^18 down* up^18)
 #gotoNeighbor(neighbor) = ((up+down+left+right){neighbor})
 #gotoBlockNeighbor(stone; neighbor) = (gotoNeighbor(stone)* gotoNeighbor(neighbor))
 #blockHasLiberty(stone) = {? gotoBlockNeighbor(stone; empty)}
@@ -24,13 +23,10 @@
       {empty}
       [stone]
       (
-          // Stawiamy na puste pole, które należy do bloku posiadającego oddech
           blockHasLiberty(stone)
-          // Stawiamy na puste pole które ma za sąsiada blok przeciwnika nie mający oddechu
-        + {? (up+down+left+right) {stone} blockHasNoLiberty(oppStone)}
+        + {? gotoNeighbor(stone) blockHasNoLiberty(oppStone)}
       )
     )
-
 
 #markNeighborToCapture(oppStone; dir; oppDir) = (
       (
@@ -44,8 +40,8 @@
       markNeighborToCapture(oppStone; down; up)
       markNeighborToCapture(oppStone; left; right)
       markNeighborToCapture(oppStone; right; left)
-    )    
-      
+    )
+
 #floodfillCaptures(oppStone) = (
       (
         anySquare
@@ -66,10 +62,10 @@
       )*
       {! anySquare {toCapture} }
     )
-    
+
 #countPoints = (
       (
-        anySquare 
+        anySquare
         {empty}
         ->>
         (
@@ -99,22 +95,22 @@
 #endGameCheck = (
       {$ blackPass + whitePass < 2}
       [$ turn = turn+1]
-    + ( {$ blackPass + whitePass == 2} + {$ turn == 722})
+    + ( {$ blackPass + whitePass == 2} + {$ turn == 721})
       countPoints resetSquare ->> {}
     )
 
 #turn(me; opp) = (
-      (
+      ->me (
           [$ me~Pass=0]
           placeStone(me~Stone; opp~Stone) ->>
           markToCapture(opp~Stone) ->>
           floodfillCaptures(opp~Stone) ->>
           clearCaptures
         + [$ me~Pass=1]
-      ) ->> endGameCheck resetSquare ->opp
+      ) ->> endGameCheck resetSquare
     )
 
-#rules = ->black (
-      turn(black; white) 
+#rules = (
+      turn(black; white)
       turn(white; black)
     )*

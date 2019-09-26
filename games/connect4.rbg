@@ -23,14 +23,14 @@
   )
 
 #turn(me; opp; piece) = (
-    (down* up^5 (left* + right*)) {e} ->> down* {e} {! down {e}} 
+    ->me (down* up^5 (left* + right*)) {e} ->> down* {e} {! down {e}}
     (
-        {! winAt(piece)} [piece] ->opp
-      + {? winAt(piece)} [$ me=100] [$ opp=0] ->> {}
+        {! winAt(piece)} [piece]
+      + {? winAt(piece)} [$ me=100, opp=0] ->> {}
     )
   )
 
-#rules = [$ red=50] [$ yellow=50] ->red (
+#rules = [$ red=50] [$ yellow=50] (
     turn(red; yellow; r)
     turn(yellow; red; y)
   )*

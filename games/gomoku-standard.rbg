@@ -1,4 +1,5 @@
-// Gomoku standard 15x15
+// Gomoku standard
+// -- A player wins with a line of length exactly 5; longer lines do not count.
 
 #players = white(100), black(100)
 #pieces = e, w, b
@@ -19,7 +20,7 @@
          [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
          [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e]
          [e,e,e,e,e,e,e,e,e,e,e,e,e,e,e])
-         
+
 #anySquare = ((up* + down*)(left* + right*))
 
 #winAt(piece; shift1; shift2) = (
@@ -29,19 +30,19 @@
 #winAt(piece) = (
       winAt(piece; up left; down right)
     + winAt(piece; up; down)
-    + winAt(piece; up right; up left)
+    + winAt(piece; up right; down left)
     + winAt(piece; left; right)
   )
 
 #turn(me; opp; piece) = (
-      anySquare {e} ->> [piece] 
-      (
-          {! winAt(piece)} ->opp
-        + {? winAt(piece)} [$ me=100] [$ opp=0] ->> {}
-      )
+    ->me anySquare {e} ->> [piece]
+    (
+        {! winAt(piece)}
+      + {? winAt(piece)} [$ me=100, opp=0] ->> {}
     )
+  )
 
-#rules = [$ white=50] [$ black=50] ->white (
+#rules = [$ white=50] [$ black=50] (
     turn(white; black; w)
     turn(black; white; b)
   )*

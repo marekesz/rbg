@@ -1,8 +1,8 @@
 #!/bin/bash
+# Example test call
 
 cd ../rbg2cpp
 
-echo -e "\n\tChess"
-make simulate_chess SIMULATIONS=1000
-make perft_chess DEPTH=5
-
+echo -e "\n\tchess-fiftyMove"
+make simulate_chess-fiftyMove SIMULATIONS=10000
+make perft_chess-fiftyMove DEPTH=5

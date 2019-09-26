@@ -1,31 +1,44 @@
-// Arimaa with a fixed initial position
-// -- There is a predefined chess-like setup.
-// -- The state after the move must be different.
-// -- No rule forbidding a state repeated three times.
-// -- Play is limited to 200 turns excluding initial setup.
+// Arimaa-split
+// -- The same rules as in arimaa, with the change that each step in a turn is performed as a separate move.
+// -- The game ends in a draw after 200 full turns excluding initial setup.
 
 #turnlimit = 199
 #colorPieces(color) = color~Elephant, color~Camel, color~Horse, color~Dog, color~Cat, color~Rabbit
 #players = gold(100), silver(100)
 #pieces = colorPieces(gold), colorPieces(silver), goldRabbitSecond, silverRabbitSecond, empty
-#variables = turn(turnlimit), steps(4), changed(1)
+#variables = turn(turnlimit), steps(4)
 
-#chessLayer = [[silverHorse ,silverCat   ,silverDog   ,silverCamel ,silverElephant,silverDog   ,silverCat   ,silverHorse]
-         [silverRabbit,silverRabbit,silverRabbit,silverRabbit,silverRabbit  ,silverRabbit,silverRabbit,silverRabbit]
-         [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
-         [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
-         [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
-         [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
-         [goldRabbit, goldRabbit, goldRabbit,goldRabbit,goldRabbit  ,goldRabbit ,goldRabbit ,goldRabbit ]
-         [goldHorse , goldCat   , goldDog   ,goldCamel ,goldElephant,goldDog    ,goldCat    ,goldHorse  ]]
-#board = cuboid(up,down,left,right,backLayer,frontLayer, chessLayer chessLayer)
+#emptyLayer = [[empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty]
+          [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
+          [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
+          [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
+          [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
+          [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
+          [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]
+          [empty     , empty     , empty     , empty     , empty     , empty     , empty     , empty     ]]
+#board = cuboid(up,down,left,right,backLayer,frontLayer, emptyLayer emptyLayer)
 
 #anySquare = (left* + right*)(up* + down*)
 #anyNeighborSquare = (left + right + up + down)
 
+#setupPiece(color; piece; backward) = (anySquare {! backward^2} {empty} ->> [color~piece])
+#setupPlayer(color; backward) =
+    (
+        ({$ color~Elephant < 1} + {$ color~Camel < 1} + {$ color~Horse < 2} + {$ color~Dog < 2} + {$ color~Cat < 2} + {$ color~Rabbit < 8})
+        ->color (
+            {$ color~Elephant < 1} setupPiece(color; Elephant; backward)
+          + {$ color~Camel < 1} setupPiece(color; Camel; backward)
+          + {$ color~Horse < 2} setupPiece(color; Horse; backward)
+          + {$ color~Dog < 2} setupPiece(color; Dog; backward)
+          + {$ color~Cat < 2} setupPiece(color; Cat; backward)
+          + {$ color~Rabbit < 8} setupPiece(color; Rabbit; backward)
+        )
+    )*
+    {$ color~Elephant == 1} {$ color~Camel == 1} {$ color~Horse == 2} {$ color~Dog == 2} {$ color~Cat == 2} {$ color~Rabbit == 8}
+
 #fireTrap = (
-      {colorPieces(gold)} ({? anyNeighborSquare {colorPieces(gold)}} + {! anyNeighborSquare {colorPieces(gold)}} [empty] [$ changed = 1])
-    + {colorPieces(silver)} ({? anyNeighborSquare {colorPieces(silver)}} + {! anyNeighborSquare {colorPieces(silver)}} [empty] [$ changed = 1])
+      {colorPieces(gold)} ({? anyNeighborSquare {colorPieces(gold)}} + {! anyNeighborSquare {colorPieces(gold)}} [empty])
+    + {colorPieces(silver)} ({? anyNeighborSquare {colorPieces(silver)}} + {! anyNeighborSquare {colorPieces(silver)}} [empty])
     + {empty}
   )
 
@@ -45,7 +58,7 @@
         + {color~Dog} anyNeighborSquare {oppColor~Elephant,oppColor~Camel,oppColor~Horse}
         + {color~Cat} anyNeighborSquare {oppColor~Elephant,oppColor~Camel,oppColor~Horse,oppColor~Dog}
         + {color~Rabbit} anyNeighborSquare {oppColor~Elephant,oppColor~Camel,oppColor~Horse,oppColor~Dog,oppColor~Cat}
-      }
+    }
   )
 
 #basicMoveRabbit(color; oppColor; forward) = (
@@ -53,7 +66,7 @@
     (
         left {empty} [color~Rabbit]
       + right {empty} [color~Rabbit]
-      + forward {empty} [color~Rabbit] [$ changed = 1]
+      + forward {empty} [color~Rabbit]
     )
   )
 
@@ -101,13 +114,13 @@
         left {empty} [color~piece] right
       + right {empty} [color~piece] left
       + up {empty} [color~piece] down
-      + down {empty} [color~piece] up
+      + down {empty} [color~piece] up   
     )
     (
         left weakerPieces displace(oppColor; right)
       + right weakerPieces displace(oppColor; left)
       + up weakerPieces displace(oppColor; down)
-      + down weakerPieces displace(oppColor; up)
+      + down weakerPieces displace(oppColor; up)    
     )
   )
 
@@ -124,6 +137,21 @@
     + pushOrPullMovePiece(color; Horse; {oppColor~Dog,oppColor~Cat,oppColor~Rabbit}; oppColor)
     + pushOrPullMovePiece(color; Dog; {oppColor~Cat,oppColor~Rabbit}; oppColor)
     + pushOrPullMovePiece(color; Cat; {oppColor~Rabbit}; oppColor)
+  )
+
+#checkWin = (
+      {$ goldRabbit > 0} {$ silverRabbit > 0} {! anySquare {! down} {silverRabbit}} {! anySquare {! up} {goldRabbit}}
+    + ({$ goldRabbit == 0} + {? anySquare {! down} {silverRabbit}}) [$ silver=100, gold=0] ->> {}
+    + ({$ silverRabbit == 0} + {? anySquare {! up} {goldRabbit}}) [$ gold=100, silver=0] ->> {}
+  )
+
+#singleMove(color; oppColor; forward; backward) = (
+    {$ steps > 0} anySquare {colorPieces(color)} {! isFrozen(color; oppColor)} (   
+        [$ steps = steps-1] basicMove(color; oppColor; forward)
+      + [$ steps = steps-2] pushOrPullMove(color; oppColor)
+    )
+    fireTraps
+    checkWin
   )
 
 #forEachPiece(actionBegin; actionEnd) = (
@@ -145,32 +173,20 @@
 #isConfigurationDifferent = {? anySquare isDifferentPieceInConfigurations}
 #isConfigurationSame = {! anySquare isDifferentPieceInConfigurations}
 #copyConfiguration = (
-    (anySquare isDifferentPieceInConfigurations ->> forEachPiece(backLayer [;]) frontLayer)*
+    (anySquare {! forEachPiece(backLayer {;})} ->> forEachPiece(backLayer [;]) frontLayer)*
     isConfigurationSame
   )
 
-#checkWin = (
-      {$ goldRabbit > 0} {$ silverRabbit > 0} {! anySquare {! down} {silverRabbit}} {! anySquare {! up} {goldRabbit}}
-    + ({$ goldRabbit == 0} + {? anySquare {! down} {silverRabbit}}) [$ silver=100, gold=0] ->> {}
-    + ({$ silverRabbit == 0} + {? anySquare {! up} {goldRabbit}}) [$ gold=100, silver=0] ->> {}
-  )
-
 #turn(color; oppColor; forward; backward) = (
-    copyConfiguration
+    [$ steps = 4] copyConfiguration
     ->color
-    [$ steps = 4] [$ changed = 0]
     (
-      {$ steps > 0} anySquare {colorPieces(color)} {! isFrozen(color; oppColor)} (
-          [$ steps = steps-1] basicMove(color; oppColor; forward)
-        + [$ steps = steps-2] pushOrPullMove(color; oppColor)
-      )
-      fireTraps
-      checkWin
+      singleMove(color; oppColor; forward; backward)
+      (   {$ steps > 0} ->color
+        + {$ steps == 0} )
     )*
-    (
-        {$ changed == 1} + {$ steps == 1} + {$ steps == 3}
-      + {$ changed == 0} ({$ steps == 0} + {$ steps == 2}) isConfigurationDifferent
-    )
+    {$ steps < 4}
+    isConfigurationDifferent
     ->> (
         {$ turn < turnlimit} [$ color=100, oppColor=0]
       + {$ turn == turnlimit} [$ color=50, oppColor=50] ->> {}
@@ -179,6 +195,9 @@
   )
 
 #rules =
+    setupPlayer(gold; down)
+    setupPlayer(silver; up)
+    ->>
     (
       turn(gold; silver; up; down)
       turn(silver; gold; down; up)

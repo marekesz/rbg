@@ -6,25 +6,23 @@
 #anyKing(color) = color~KingMoved, color~KingUnmoved
 #majorPieces(color) = color~RookMoved, color~Knight, color~Bishop, color~Queen
 #singleColorPieces(color) = color~Pawn, anyKing(color), anyRook(color), color~Knight, color~Bishop, color~Queen
-#emptyOrColor(color) = singleColorPieces(color), empty
-#allPieces = singleColorPieces(white), singleColorPieces(black)
 
 #players = white(100), black(100)
-#pieces = allPieces, empty
+#pieces = singleColorPieces(white), singleColorPieces(black), empty
 #variables = pawnDoubleMove(1), turnCount(400)
 
 #board = rectangle(up,down,left,right,
          [blackRookUnmoved, blackKnight, blackBishop, blackQueen, blackKingUnmoved, blackBishop, blackKnight, blackRookUnmoved, blackRookUnmoved, blackKnight, blackBishop, blackQueen, blackKingUnmoved, blackBishop, blackKnight, blackRookUnmoved]
-         [blackPawn       , blackPawn  , blackPawn  , blackPawn , blackPawn, blackPawn  , blackPawn  , blackPawn       , blackPawn       , blackPawn  , blackPawn  , blackPawn , blackPawn, blackPawn  , blackPawn  , blackPawn       ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ,empty           , empty      , empty      , empty     , empty    , empty      ,empty       , empty           ]
-         [whitePawn       , whitePawn  , whitePawn  , whitePawn , whitePawn, whitePawn  , whitePawn  , whitePawn       , whitePawn       , whitePawn  , whitePawn  , whitePawn , whitePawn, whitePawn  , whitePawn  , whitePawn       ]
+         [blackPawn       , blackPawn  , blackPawn  , blackPawn , blackPawn       , blackPawn  , blackPawn  , blackPawn       , blackPawn       , blackPawn  , blackPawn  , blackPawn , blackPawn       , blackPawn  , blackPawn  , blackPawn       ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           , empty           , empty      , empty      , empty     , empty           , empty      , empty      , empty           ]
+         [whitePawn       , whitePawn  , whitePawn  , whitePawn , whitePawn       , whitePawn  , whitePawn  , whitePawn       , whitePawn       , whitePawn  , whitePawn  , whitePawn , whitePawn       , whitePawn  , whitePawn  , whitePawn       ]
          [whiteRookUnmoved, whiteKnight, whiteBishop, whiteQueen, whiteKingUnmoved, whiteBishop, whiteKnight, whiteRookUnmoved, whiteRookUnmoved, whiteKnight, whiteBishop, whiteQueen, whiteKingUnmoved, whiteBishop, whiteKnight, whiteRookUnmoved])
 
 #anySquare = (left* + right*)(up* + down*)
@@ -49,7 +47,7 @@
       + (left^2 + right^2)(up + down)
     )
 
-#captureAnyBy(capturingPiece; oppColor) = {emptyOrColor(oppColor)} [capturingPiece]
+#captureAnyBy(capturingPiece; oppColor) = {empty,singleColorPieces(oppColor)} [capturingPiece]
 
 #pickUpPiece(piece) = {piece}[empty]
 
@@ -95,7 +93,7 @@
         left^2
       + left {empty} {! isAttackedBy(oppColor; forward; backward)}
         left {empty} [color~KingMoved]
-        left {empty} // Rook CAN pass through an attacked square
+        left {empty} // Rook can pass through an attacked square
         left pickUpPiece(color~RookUnmoved)
         right^3
     )
@@ -133,11 +131,11 @@
     {$ pawnDoubleMove==1}
     ([empty] + [empty]forward + [empty]forward^2)
     (
-        // We are sure that adjacent cell is occupied by opponentColor~Pawn, because pawnDoubleMove==1, so do not check it
+        // We are sure that the current square is occupied by opponentColor~Pawn, because pawnDoubleMove==1, so do not check it
         right pickUpPiece(color~Pawn) left
       + left pickUpPiece(color~Pawn) right
     ) forward [color~Pawn] [$ pawnDoubleMove=0]
-    
+
 #move(forward; backward; color; oppColor) = (
      (
           [$ pawnDoubleMove=0]
@@ -155,14 +153,14 @@
   )
 
 #turn(forward; backward; color; oppColor) = (
-    move(forward; backward; color; oppColor)
+    ->color move(forward; backward; color; oppColor)
     ->>
     [$ turnCount = turnCount+1]
     (
         {$ turnCount < 400} ->> (
             {! checked(oppColor; color; backward; forward)} [$ color=50,oppColor=50] // Draw if stalemate (no further legal move)
           + {? checked(oppColor; color; backward; forward)} [$ color=100,oppColor=0] // Win if checkmate (no further legal move)
-        ) ->oppColor
+        )
       + {$ turnCount == 400} [$ color=50,oppColor=50] ->> (
             {! checked(oppColor; color; backward; forward)} ->> {} // Draw if not checked
           + {? checked(oppColor; color; backward; forward)}
@@ -172,7 +170,7 @@
     )
   )
 
-#rules = ->white (
-        turn(up;down;white;black)
-        turn(down;up;black;white)
-    )*
+#rules = (
+    turn(up;down;white;black)
+    turn(down;up;black;white)
+  )*

@@ -1,8 +1,9 @@
-// Breakthrough
+// Knightthrough
+// -- A player wins when reaches the opponent's back rank or captures all his pieces.
 
-#players = white(100), black(100) // 0-100 scores
+#players = white(100), black(100)
 #pieces = e, w, b
-#variables = // no variables
+#variables =
 #board = rectangle(up,down,left,right,
          [b, b, b, b, b, b, b, b]
          [b, b, b, b, b, b, b, b]
@@ -15,13 +16,14 @@
 
 #anySquare = ((up* + down*)(left* + right*))
 
-#turn(me; myPawn; opp; oppPawn; forward) =
-    ->me anySquare {myPawn}
-    [e] forward ({e} + (left+right) {e,oppPawn})
+#knightShift(forward) = (forward (left^2 + (left + right) forward + right^2))
+
+#turn(me; myKnight; opp; oppKnight; forward) =
+    ->me anySquare {myKnight} [e] knightShift(forward) {e,oppKnight}
     ->>
     [$ me=100] [$ opp=0]
-    (  {? forward} [myPawn]
-     + {! forward} ->> {})
+    (  {? forward} [myKnight]
+     + {! forward} ->> {} )
 
 #rules = (
       turn(white; w; black; b; up)

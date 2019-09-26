@@ -31,17 +31,16 @@
 
 #reachable(dir; piece) = ((anyNeighbor {piece})* {! dir})
 
-#turn(player; oppPlayer; dir1; dir2; piece) =
-  anySquare {e} ->> [piece]
-  (
-     ({! reachable(dir1; piece)} + {! reachable(dir2; piece)})
-     ->oppPlayer
-    + {? reachable(dir1; piece)} {? reachable(dir2; piece)}
-      [$ player=100, oppPlayer=0]
-      ->> {}
+#turn(me; opp; dir1; dir2; piece) = (
+    ->me anySquare {e} ->> [piece]
+    (
+        ({! reachable(dir1; piece)} + {! reachable(dir2; piece)})
+      + {? reachable(dir1; piece)} {? reachable(dir2; piece)}
+        [$ me=100] ->> {}
+    )
   )
 
-#rules = ->red (
+#rules = (
     turn(red; blue; NW; SE; r)
     turn(blue; red; NE; SW; b)
   )*

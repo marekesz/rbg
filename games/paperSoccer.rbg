@@ -117,21 +117,21 @@
     )
 
 #turn(me; opp) =
-    singleJump
+    ->me singleJump
     (
         {? canMoveFurther}
         changeJustArrivedIntoVisited
         singleJump
     )*
     {! canMoveFurther}
-    ->>changeJustArrivedIntoVisited
+    ->> changeJustArrivedIntoVisited
     (
-        {whiteGoal}[$ black=100, white=0]->>{}
-      + {blackGoal}[$ white=100, black=0]->>{}
-      + {empty}[$ me=100, opp=0] ->opp
+        {whiteGoal} [$ black=100, white=0] ->> {}
+      + {blackGoal} [$ white=100, black=0] ->> {}
+      + {empty} [$ me=100, opp=0]
     )
 
-#rules = findBall ->white (
+#rules = findBall (
     turn(white; black)
     turn(black; white)
   )*

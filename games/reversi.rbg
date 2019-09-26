@@ -16,63 +16,63 @@
 #anySquare = ((up* + down*)(left* + right*))
 #anyNeighborSquare = (up + down + left + right + (up + down)(left + right))
 
-#swapDirectionPossible(me; opp; dir) = (
-    dir {opp} dir
-    ({opp} dir)*
-    {me}
+#swapDirectionPossible(mePawn; oppPawn; dir) = (
+    dir {oppPawn} dir
+    ({oppPawn} dir)*
+    {mePawn}
   )
 
-#movePossible(me; opp) = (
-      swapDirectionPossible(me; opp; up left)
-    + swapDirectionPossible(me; opp; up)
-    + swapDirectionPossible(me; opp; up right)
-    + swapDirectionPossible(me; opp; left)
-    + swapDirectionPossible(me; opp; right)
-    + swapDirectionPossible(me; opp; down left)
-    + swapDirectionPossible(me; opp; down)
-    + swapDirectionPossible(me; opp; down right)
+#movePossible(mePawn; oppPawn) = (
+      swapDirectionPossible(mePawn; oppPawn; up left)
+    + swapDirectionPossible(mePawn; oppPawn; up)
+    + swapDirectionPossible(mePawn; oppPawn; up right)
+    + swapDirectionPossible(mePawn; oppPawn; left)
+    + swapDirectionPossible(mePawn; oppPawn; right)
+    + swapDirectionPossible(mePawn; oppPawn; down left)
+    + swapDirectionPossible(mePawn; oppPawn; down)
+    + swapDirectionPossible(mePawn; oppPawn; down right)
   )
 
-#swapDirection(me; opp; dir; backDir) = (
-      {! swapDirectionPossible(me; opp; dir)}
-    + dir {opp} [me] dir ({opp} [me] dir)* {me}
-      backDir ({me} backDir)* {e}
+#swapDirection(mePawn; oppPawn; dir; backDir) = (
+      {! swapDirectionPossible(mePawn; oppPawn; dir)}
+    + dir {oppPawn} [mePawn] dir ({oppPawn} [mePawn] dir)* {mePawn}
+      backDir ({mePawn} backDir)* {e}
   )
 
-#swapDirections(me; opp) = (
-    swapDirection(me; opp; up left; down right)
-    swapDirection(me; opp; up; down)
-    swapDirection(me; opp; up right; down left)
-    swapDirection(me; opp; left; right)
-    swapDirection(me; opp; right; left)
-    swapDirection(me; opp; down left; up right)
-    swapDirection(me; opp; down; up)
-    swapDirection(me; opp; down right; up left)
+#swapDirections(mePawn; oppPawn) = (
+    swapDirection(mePawn; oppPawn; up left; down right)
+    swapDirection(mePawn; oppPawn; up; down)
+    swapDirection(mePawn; oppPawn; up right; down left)
+    swapDirection(mePawn; oppPawn; left; right)
+    swapDirection(mePawn; oppPawn; right; left)
+    swapDirection(mePawn; oppPawn; down left; up right)
+    swapDirection(mePawn; oppPawn; down; up)
+    swapDirection(mePawn; oppPawn; down right; up left)
   )
 
 #setScores = (
-      {$ w > b} [$ black = 0] [$ white = 100]
-    + {$ w < b} [$ black = 100] [$ white = 0]
+      {$ w > b} [$ white = 100]
+    + {$ w < b} [$ black = 100]
     + {$ w == b} [$ black = 50] [$ white = 50]
   )
 
-#turn(me; opp) = (
-    (
-        (anySquare {opp} anyNeighborSquare {e} {? movePossible(me; opp)})
+#turn(me; mePawn; opp; oppPawn) = (
+    ->me (
+        (anySquare {oppPawn} anyNeighborSquare {e} {? movePossible(mePawn; oppPawn)})
         ->>
-        swapDirections(me; opp)
-        [me]
-      + {! anySquare {opp} anyNeighborSquare {e} {? movePossible(me; opp)}}
+        swapDirections(mePawn; oppPawn)
+        [mePawn]
+      + {! anySquare {oppPawn} anyNeighborSquare {e} {? movePossible(mePawn; oppPawn)}}
         ->>
     )
     (
-        {? anySquare ({opp} anyNeighborSquare {e} movePossible(me; opp) + {me} anyNeighborSquare {e} movePossible(opp; me))}
-      + {! anySquare ({opp} anyNeighborSquare {e} movePossible(me; opp) + {me} anyNeighborSquare {e} movePossible(opp; me))}
+        {? anySquare ({oppPawn} anyNeighborSquare {e} movePossible(mePawn; oppPawn) + {mePawn} anyNeighborSquare {e} movePossible(oppPawn; mePawn))}
+      + {! anySquare ({oppPawn} anyNeighborSquare {e} movePossible(mePawn; oppPawn) + {mePawn} anyNeighborSquare {e} movePossible(oppPawn; mePawn))}
         ->> setScores ->> {}
     )
   )
 
 #rules = (
-    ->black turn(b; w)
-    ->white turn(w; b)
+    turn(black; b; white; w)
+    turn(white; w; black; b)
   )*

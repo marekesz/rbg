@@ -17,26 +17,23 @@
 
 #anySquare = ((up* + down*)(left* + right*))
 
+#directedShift(dir) = (dir {e} (dir {e})*)
 #queenShift = (
-      (up left {e}) (up left {e})* +
-      (up {e}) (up {e})* +
-      (up right {e}) (up right {e})* +
-      (left {e}) (left {e})* +
-      (right {e}) (right {e})* +
-      (down left {e}) (down left {e})* +
-      (down {e}) (down {e})* +
-      (down right {e}) (down right {e})*
-    )
-
-#turn(piece; player) = (
-    anySquare {piece} [e]
-    queenShift
-    [piece]
-    queenShift
-    ->> [x]
+    directedShift(up left) +
+    directedShift(up) +
+    directedShift(up right) +
+    directedShift(left) +
+    directedShift(right) +
+    directedShift(down left) +
+    directedShift(down) +
+    directedShift(down right)
   )
 
-#rules = ->white (
-    turn(w; white) [$ white=100, black=0] ->black
-    turn(b; black) [$ white=0, black=100] ->white
-  )*
+#turn(piece; me; opp) = (
+    ->me anySquare {piece} [e]
+    queenShift [piece]
+    queenShift
+    ->> [x] [$ me=100, opp=0]
+  )
+
+#rules = (turn(w; white; black) turn(b; black; white))*
