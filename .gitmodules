@@ -1,0 +1,6 @@
+[submodule "rbggamemanager"]
+	path = rbggamemanager
+	url = https://github.com/shrumo/rbggamemanager
+[submodule "rbg2cpp"]
+	path = rbg2cpp
+	url = https://github.com/uicus/rbg2cpp
