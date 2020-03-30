@@ -4,3 +4,12 @@
 [submodule "rbg2cpp"]
 	path = rbg2cpp
 	url = https://github.com/uicus/rbg2cpp
+[submodule "rbgcpp2py"]
+	path = rbgcpp2py
+	url = https://github.com/shrumo/rbgcpp2py
+[submodule "rbgGameSpecificReasoners"]
+	path = rbgGameSpecificReasoners
+	url = https://github.com/WoojtekP/rbgGameSpecificReasoners
+[submodule "rbgGames"]
+	path = rbgGames
+	url = https://github.com/marekesz/rbgGames
