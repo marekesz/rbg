@@ -1,3 +1,9 @@
+### RBG 1.3:
+
+* Added rbgPlayer module with MCTS agents.
+* Support for semisplit MCTS.
+* Improvements in rbg2cpp; minor optimizations.
+
 ### RBG 1.2:
 
 * Added monotonic classes optimization to the compiler.
