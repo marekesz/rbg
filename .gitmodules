@@ -13,3 +13,6 @@
 [submodule "rbgGames"]
 	path = rbgGames
 	url = https://github.com/marekesz/rbgGames
+[submodule "rbgPlayer"]
+	path = rbgPlayer
+	url = https://github.com/WoojtekP/rbgPlayer
