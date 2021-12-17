@@ -23,9 +23,6 @@ make rbg2cpp
 cd ${DIR}
 
 # generate configuration files
-python3 rbgPlayer/generate_agents.py
-
-# create directory for logs
-mkdir -p logs
+python3 rbgPlayer/scripts/generate_agents.py
 
 echo "Configuration succeeded"
